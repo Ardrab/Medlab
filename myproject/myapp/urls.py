@@ -42,7 +42,9 @@ urlpatterns = [
     path('get_tests_by_type/<int:test_id>/', views.get_tests_by_type, name='get_tests_by_type'),
     path('add_test_type/submit/', views.add_test_type, name='add_test_type'),
     path('bookings/', views.booking_list_view, name='booking_list_view'),
+    path('user/schedule-xray/', views.schedule_xray_view, name='schedule_xray'),
 ]
+
 
      
 

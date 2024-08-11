@@ -784,3 +784,9 @@ def booking_list_view(request):
     bookings = Booking.objects.all()
     return render(request, 'lab/booking_detail.html', {'bookings': bookings})
 
+from django.shortcuts import render
+from django.http import HttpResponse
+
+def schedule_xray_view(request):
+    # Render the form template
+    return render(request, 'user/schedule-xray.html')
