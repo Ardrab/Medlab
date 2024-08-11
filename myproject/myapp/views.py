@@ -711,16 +711,24 @@ from django.http import HttpResponse
 from datetime import datetime
 from .models import Tests, Booking, TestName
 
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from datetime import datetime
+from .models import Booking, Tests, TestName
+
 @login_required
 def add_test_type(request):
     if request.method == 'POST':
         # Extract data from the POST request
+        test_id=request.POST.get('test_id')
         name_id = request.POST.get('name_id')
         test_ids = request.POST.getlist('test_ids')
         appointment_date = request.POST.get('appointment_date')
         appointment_time = request.POST.get('appointment_time')
 
         # Debug statements to verify data
+        print("TE ID:", test_id)
         print("Name ID:", name_id)
         print("Test IDs:", test_ids)
         print("Appointment Date:", appointment_date)
@@ -731,46 +739,45 @@ def add_test_type(request):
             return HttpResponse("Required fields are missing.")
         
         # Convert 12-hour time format (if needed) to 24-hour time format
-        try:
+        if appointment_time:
             appointment_time_24 = datetime.strptime(appointment_time, '%I:%M %p').strftime('%H:%M')
-        except ValueError:
+        else:
             return HttpResponse("Invalid time format. Please use 'HH:MM AM/PM'.")
 
         # Combine date and time into a single datetime
-        try:
-            appointment_datetime = datetime.combine(datetime.strptime(appointment_date, '%Y-%m-%d').date(),
-                                                    datetime.strptime(appointment_time_24, '%H:%M').time())
-        except ValueError:
+        if appointment_date and appointment_time_24:
+            appointment_datetime = datetime.combine(
+                datetime.strptime(appointment_date, '%Y-%m-%d').date(),
+                datetime.strptime(appointment_time_24, '%H:%M').time()
+            )
+        else:
             return HttpResponse("Invalid date or time format.")
 
-        try:
-            # Create and save a new Booking
-            booking = Booking(
-                user=request.user,
-                appointment_date=appointment_datetime,
-                appointment_time=appointment_time_24,  # Store time in 24-hour format
-                status='Scheduled',  # Default status
-                test_id=name_id  # Set the test type based on the name_id
-            )
-            booking.save()
+        # Create and save a new Booking
+        booking = Booking(
+            user=request.user,
+            appointment_date=appointment_datetime,
+            appointment_time=appointment_time_24,  # Store time in 24-hour format
+            status='pending',  # Default status
+            test_id=name_id  # Set the test type based on the name_id
+        )
+        booking.save()
 
-            # Optionally, handle additional test types if necessary
-            for test_id in test_ids:
-                test = Tests.objects.filter(test_id=test_id).first()
-                if test:
-                    # Handle saving TestType information or associate it with the booking if needed
-                    pass
+        # Optionally, handle additional test types if necessary
+        for test_id in test_ids:
+            test = Tests.objects.filter(test_id=test_id).first()
+            if test:
+                # Handle saving TestType information or associate it with the booking if needed
+                pass
 
-            return HttpResponse("Form submitted successfully!")
-
-        except Exception as e:
-            print(f"Error: {e}")
-            return HttpResponse("An error occurred during form submission.")
+        # Redirect to userindex after successful form submission
+        return redirect('user_index')
     
     else:
         # For GET requests, render the form
         test_names = TestName.objects.all()
         return render(request, 'user/add_test_type.html', {'test_names': test_names})
+
 from django.shortcuts import render, get_object_or_404
 from .models import Booking
 from .forms import BookingForm
@@ -788,5 +795,17 @@ from django.shortcuts import render
 from django.http import HttpResponse
 
 def schedule_xray_view(request):
+    
     # Render the form template
-    return render(request, 'user/schedule-xray.html')
+    return render(request, 'schedule-xray.html')
+@login_required
+def update_booking_status(request, booking_id, new_status):
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    # Ensure the new_status is valid
+    if new_status in dict(Booking.STATUS_CHOICES):
+        booking.status = new_status
+        booking.save()
+        return redirect('booking_list_view')
+    else:
+        return HttpResponse("Invalid status.")

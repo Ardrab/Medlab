@@ -12,17 +12,17 @@
     <link rel="stylesheet" href="{% static 'assets/plugins/slider/css/owl.carousel.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/plugins/slider/css/owl.theme.default.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style.css' %}" />
-    <script type="text/javascript" >
+    <script type="text/javascript">
         function preventBack(){window.history.forward();}
-         setTimeout("preventBack()", 0);
-         window.onunload=function(){null};
+        setTimeout("preventBack()", 0);
+        window.onunload = function() {null};
     </script>
     <style>
         .btn-info {
             background-color: #3366ff;
             border-color: #3366ff;
             margin-left: -100px;
-            margin-top:30px
+            margin-top: 30px;
         }
 
         .btn-info:hover {
@@ -124,7 +124,7 @@
                     <!-- Navigation Menu -->
                     <div id="menu" class="col-lg-7 col-md-8 d-none d-md-block nav-item">
                         <ul>
-                            <li><a href="{% url 'index' %}">Home</a></li>
+                            <li><a href="{% url 'userindex' %}">Home</a></li>
                             <li><a href="#about">About Us</a></li>
                             <li><a href="#services">Services</a></li>
                             <li><a href="#gallery">Gallery</a></li>
@@ -158,156 +158,139 @@
     </header>
 
     <!-- Registration Form -->
-<br><br>
-<div class="container mt-5">
-    <div class="form-container">
-        <h2 class="text-center mb-4">Book Appointment</h2>
-        <form method="post" action="{% url 'add_test_type' %}">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="name_id">Test Name</label>
-                <select class="form-control" id="name_id" name="name_id" required>
-                    <option value="">Select Test Name</option>
-                    {% for test_name in test_names %}
-                        <option value="{{ test_name.name_id }}">{{ test_name.test_name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="test_ids" class="form-label">Test Type Names</label>
-                <select id="test_ids" name="test_ids" class="form-control" multiple onchange="updateTests()" required>
-                    <!-- Options will be populated by JavaScript -->
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="tests_names" class="form-label">Test Names</label>
-                <div id="test_names_container" class="mt-3">
-                    <!-- Test names will be dynamically added here -->
+    <br><br>
+    <div class="container mt-5">
+        <div class="form-container">
+            <h2 class="text-center mb-4">Book Appointment</h2>
+            <form method="post" action="{% url 'add_test_type' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="name_id">Test Name</label>
+                    <select class="form-control" id="name_id" name="name_id" required>
+                        <option value="">Select Test Name</option>
+                        {% for test_name in test_names %}
+                            <option value="{{ test_name.name_id }}">{{ test_name.test_name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-            </div>
-            <div class="form-group">
-                <label for="appointment_date" class="form-label">Appointment Date</label>
-                <input type="date" id="appointment_date" name="appointment_date" class="form-control" required>
-                <small id="dateError" class="form-text text-danger" style="display: none;">Please select a date from today onwards.</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="appointment_time" class="form-label">Appointment Time</label>
-                <select id="appointment_time" name="appointment_time" class="form-control" required>
-                    <!-- Time options will be populated by JavaScript -->
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-    </div>
+                <div class="form-group">
+                    <label for="test_ids" class="form-label">Test Type Names</label>
+                    <select id="test_ids" name="test_ids" class="form-control" multiple onchange="updateTests()" required>
+                        {% for test in tests %}
+                            <option value="{{ test.test_id }}">{{ test.test_type_names }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="tests_names" class="form-label">Test Names</label>
+                    <div id="test_names_container" class="mt-3">
+                        <!-- Test names will be dynamically added here -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="appointment_date" class="form-label">Appointment Date</label>
+                    <input type="date" id="appointment_date" name="appointment_date" class="form-control" required>
+                    <small id="dateError" class="form-text text-danger" style="display: none;">Please select a date from today onwards.</small>
+                </div>
+                <div class="form-group">
+                    <label for="appointment_time" class="form-label">Appointment Time</label>
+                    <select id="appointment_time" name="appointment_time" class="form-control" required>
+                        <!-- Time options will be populated by JavaScript -->
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('name_id').addEventListener('change', function() {
-                const nameId = this.value;
-                if (nameId) {
-                    fetch(`/get_test_types_by_name/${nameId}/`)
-                        .then(response => response.json())
-                        .then(data => {
-                            const select = document.getElementById('test_ids');
-                            select.innerHTML = ''; // Clear existing options
-                            data.test_types.forEach(type => {
-                                const option = document.createElement('option');
-                                option.value = type.test_id;
-                                option.textContent = type.test_type_names;
-                                select.appendChild(option);
-                            });
-                        })
-                        .catch(error => console.error('Error fetching test types:', error));
-                }
-            });
-
-            document.getElementById('test_ids').addEventListener('change', function() {
-                updateTests();
-            });
-
-            function updateTests() {
-                const selectedIds = Array.from(document.getElementById('test_ids').selectedOptions).map(option => option.value);
-                const testNamesContainer = document.getElementById('test_names_container');
-                testNamesContainer.innerHTML = ''; // Clear existing test names
-
-                if (selectedIds.length === 0) {
-                    return;
-                }
-
-                const fetchedTests = new Set(); // Track fetched test names
-
-                selectedIds.forEach(testId => {
-                    fetch(`/get_tests_by_type/${testId}/`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.tests.length > 0) {
-                                data.tests.forEach(test => {
-                                    if (!fetchedTests.has(test.tests_names)) { // Avoid adding duplicates
-                                        fetchedTests.add(test.tests_names);
-                                        const checkbox = document.createElement('div');
-                                        checkbox.classList.add('form-check');
-                                        checkbox.innerHTML = `
-                                            <input type="checkbox" class="form-check-input" id="${test.tests_names.replace(/\s+/g, '')}_${testId}" name="tests_names" value="${test.tests_names}">
-                                            <label class="form-check-label" for="${test.tests_names.replace(/\s+/g, '')}_${testId}">${test.tests_names}</label>
-                                        `;
-                                        testNamesContainer.appendChild(checkbox);
-                                    }
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                document.getElementById('name_id').addEventListener('change', function() {
+                    const nameId = this.value;
+                    if (nameId) {
+                        fetch(`/get_test_types_by_name/${nameId}/`)
+                            .then(response => response.json())
+                            .then(data => {
+                                const select = document.getElementById('test_ids');
+                                select.innerHTML = ''; // Clear existing options
+                                data.test_types.forEach(type => {
+                                    const option = document.createElement('option');
+                                    option.value = type.test_id;
+                                    option.textContent = type.test_type_names;
+                                    select.appendChild(option);
                                 });
-                            } else {
-                                testNamesContainer.innerHTML = '<p>No tests available for the selected type.</p>';
-                            }
-                        })
-                        .catch(error => console.error('Error fetching test names:', error));
+                            })
+                            .catch(error => console.error('Error fetching test types:', error));
+                    }
                 });
-            }
 
-            // Populate appointment time options from 8:00 AM to 6:00 PM
-            const timeSelect = document.getElementById('appointment_time');
-            const times = [];
+                document.getElementById('test_ids').addEventListener('change', function() {
+                    updateTests();
+                });
 
-            for (let hour = 8; hour <= 18; hour++) {
-                for (let minute = 0; minute < 60; minute += 30) {
-                    const ampm = hour >= 12 ? 'PM' : 'AM';
-                    const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
-                    const time = `${displayHour}:${minute === 0 ? '00' : minute} ${ampm}`;
-                    times.push(time);
+                function updateTests() {
+                    const selectedIds = Array.from(document.getElementById('test_ids').selectedOptions).map(option => option.value);
+                    const testNamesContainer = document.getElementById('test_names_container');
+                    testNamesContainer.innerHTML = ''; // Clear existing test names
+
+                    if (selectedIds.length === 0) {
+                        return;
+                    }
+
+                    const fetchedTests = new Set(); // Track fetched test names
+
+                    selectedIds.forEach(testId => {
+                        fetch(`/get_tests_by_type/${testId}/`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.tests.length > 0) {
+                                    data.tests.forEach(test => {
+                                        if (!fetchedTests.has(test.tests_names)) { // Avoid adding duplicates
+                                            fetchedTests.add(test.tests_names);
+                                            const checkbox = document.createElement('div');
+                                            checkbox.classList.add('form-check');
+                                            checkbox.innerHTML = `
+                                                <input type="checkbox" class="form-check-input" id="${test.tests_names.replace(/\s+/g, '')}_${testId}" name="tests_names" value="${test.tests_names}">
+                                                <label class="form-check-label" for="${test.tests_names.replace(/\s+/g, '')}_${testId}">${test.tests_names}</label>
+                                            `;
+                                            testNamesContainer.appendChild(checkbox);
+                                        }
+                                    });
+                                } else {
+                                    testNamesContainer.innerHTML = '<p>No tests available for the selected type.</p>';
+                                }
+                            })
+                            .catch(error => console.error('Error fetching test names:', error));
+                    });
                 }
-            }
 
-            times.forEach(time => {
-                const option = document.createElement('option');
-                option.value = time;
-                option.textContent = time;
-                timeSelect.appendChild(option);
+                // Populate appointment time options from 8:00 AM to 6:00 PM
+                const timeSelect = document.getElementById('appointment_time');
+                const times = [];
+
+                for (let hour = 8; hour <= 18; hour++) {
+                    for (let minute = 0; minute < 60; minute += 30) {
+                        const ampm = hour >= 12 ? 'PM' : 'AM';
+                        const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+                        const time = `${displayHour}:${minute === 0 ? '00' : minute} ${ampm}`;
+                        times.push(time);
+                    }
+                }
+
+                times.forEach(time => {
+                    const option = document.createElement('option');
+                    option.value = time;
+                    option.textContent = time;
+                    timeSelect.appendChild(option);
+                });
             });
-        });
-    </script>
-</div>
+        </script>
 
-<script src="{% static 'assets/js/jquery-3.2.1.min.js' %}"></script>
-<script src="{% static 'assets/js/popper.min.js' %}"></script>
-<script src="{% static 'assets/js/bootstrap.min.js' %}"></script>
-<script src="{% static 'assets/plugins/slider/js/owl.carousel.min.js' %}"></script>
-<script src="{% static 'assets/plugins/scroll-fixed/jquery-scrolltofixed-min.js' %}"></script>
-<script src="{% static 'assets/js/script.js' %}"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
-<script>
-    $(document).ready(function() {
-    // Set the minimum date to today's date
-    var today = new Date().toISOString().split('T')[0];
-    $('#appointment_date').attr('min', today);
+        <!-- Include necessary JavaScript files -->
+        <script src="{% static 'assets/js/jquery.min.js' %}"></script>
+        <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
+        <script src="{% static 'assets/plugins/slider/js/owl.carousel.min.js' %}"></script>
+        <script src="{% static 'assets/js/main.js' %}"></script>
+    </div>
+</body>
 
-    // Check if the selected date is valid
-    $("#appointment_date").on("change", function() {
-        var selectedDate = $(this).val();
-        if (selectedDate < today) {
-            $("#dateError").show();
-            $(this).val(today); // Reset the date to today if an invalid date is selected
-        } else {
-            $("#dateError").hide();
-        }
-    });
-});
-
-</script>
+</html>

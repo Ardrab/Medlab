@@ -43,6 +43,7 @@ urlpatterns = [
     path('add_test_type/submit/', views.add_test_type, name='add_test_type'),
     path('bookings/', views.booking_list_view, name='booking_list_view'),
     path('user/schedule-xray/', views.schedule_xray_view, name='schedule_xray'),
+    path('update_booking_status/<int:booking_id>/<str:new_status>/', views.update_booking_status, name='update_booking_status'),
 ]
 
 

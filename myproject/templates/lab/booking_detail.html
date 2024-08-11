@@ -170,7 +170,6 @@
 </head>
 <body>
 
-<div class="container mt-5">
     <div class="container mt-5">
         <h2 class="text-center mb-4">All Bookings</h2>
         <table class="table table-striped">
@@ -190,16 +189,37 @@
                 <tr>
                     <td>{{ booking.id }}</td>
                     <td>{{ booking.user }}</td>
-                    <td>{{ booking.appointment_date }}</td>
-                    <td>{{ booking.appointment_time }}</td>
-                    <td>{{ booking.status }}</td>
+                    <td>{{ booking.appointment_date|date:"Y-m-d" }}</td>
+                    <td>{{ booking.appointment_time|time:"H:i" }}</td>
+                    <td>
+                        <span class="badge 
+                            {% if booking.status == 'pending' %}
+                                badge-warning
+                            {% elif booking.status == 'scheduled' %}
+                                badge-success
+                            {% endif %}">
+                            {{ booking.get_status_display }}
+                        </span>
+                    </td>
                     <td>{{ booking.test }}</td>
-                    <td><a href="{% url 'booking_list_view' %}" class="btn btn-primary">View</a></td>
+                    <td>
+                        {% if booking.status == 'pending' %}
+                            <a href="{% url 'update_booking_status' booking.id 'scheduled' %}" class="btn btn-success btn-sm">
+                                pending
+                            </a>
+                        {% elif booking.status == 'scheduled' %}
+                            <a href="{% url 'update_booking_status' booking.id 'pending' %}" class="btn btn-warning btn-sm">
+                                Schedule
+                            </a>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        
     </div>
+    
 <script src="{% static 'assets/js/jquery-3.2.1.min.js' %}"></script>
 <script src="{% static 'assets/js/bootstrap.min.js' %}"></script>
 </body>

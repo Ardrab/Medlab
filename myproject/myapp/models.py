@@ -73,13 +73,20 @@ class TestType(models.Model):
     def __str__(self):
         return self.tests_names
 
+from django.conf import settings
+from django.db import models
+
 class Booking(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('scheduled', 'Scheduled'),
+    ]
+    
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     appointment_date = models.DateTimeField()
     appointment_time = models.TimeField()
-    status = models.CharField(max_length=20)
-    test = models.ForeignKey(Tests, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    test = models.ForeignKey(TestName, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"Booking with {self.user} on {self.appointment_date}"
-
