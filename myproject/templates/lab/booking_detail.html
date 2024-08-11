@@ -12,7 +12,11 @@
     <link rel="stylesheet" href="{% static 'assets/plugins/slider/css/owl.carousel.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/plugins/slider/css/owl.theme.default.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style.css' %}" />
-
+    <script type="text/javascript" >
+        function preventBack(){window.history.forward();}
+         setTimeout("preventBack()", 0);
+         window.onunload=function(){null};
+    </script>
     <style>
         .btn-info {
             background-color: #3366ff;
@@ -120,7 +124,7 @@
                     <!-- Navigation Menu -->
                     <div id="menu" class="col-lg-7 col-md-8 d-none d-md-block nav-item">
                         <ul>
-                            <li><a href="{% url 'index' %}">Home</a></li>
+                            <li><a href="{% url 'labindex' %}">Home</a></li>
                             <li><a href="#about">About Us</a></li>
                             <li><a href="#services">Services</a></li>
                             <li><a href="#gallery">Gallery</a></li>

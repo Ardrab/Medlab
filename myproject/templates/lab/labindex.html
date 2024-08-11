@@ -16,7 +16,7 @@
     <style>
         .btn-info {
             position: absolute;
-            left: -10px;
+            margin-left: 50px;
             top: 20px;
             background-color: #3366ff;
         }
@@ -42,9 +42,9 @@
             background-color: #3366ff;
             color: white;
             border-color: #3366ff;
-            margin-left: -70px;
+            margin-left: -40px;
             margin-bottom: -1000px;
-            margin-top: -50px;
+            margin-top: -40px;
         }
 
         .dropdown-menu {
@@ -68,6 +68,9 @@
         .dropdown-toggle1{
             margin-left: -350px;
             margin-top: 50px;
+        }
+        .li{
+            margin-left: -20px;
         }
     </style>
 <script type="text/javascript" >
@@ -97,8 +100,10 @@
                             <li><a href="{% url 'index' %}">Home</a></li>
                             <li><a href="{% url 'addtesttypes' %}">Add test types</a></li>
                             <li><a href="{% url 'addtestname' %}">Add Tests</a></li>
-                            <li><a href="{% url 'addtest' %}">Add test</a></li>
                             <li><a href="{% url 'booking_list_view' %}">Appointments</a></li>
+                            <li class="li"><a href="{% url 'addtest' %}">Add test</a></li>
+                            
+                            
                         </ul>
                     </div>
 
@@ -117,7 +122,7 @@
                                 Welcome, {{ user.email }}
                             </button>
                             <div class="dropdown-menu" aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="{% url 'profile' %}">Profile</a>
+                                <a class="dropdown-item" href="{% url 'labprofile' %}">Profile</a>
                                 <a class="dropdown-item" href="#">Settings</a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>

@@ -19,7 +19,6 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import LabTechnician
-
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -33,25 +32,33 @@ def login_view(request):
             print(f"User {user.email} authenticated successfully.")
             
             # Check if user is a lab technician and if their profile is completed
-            if user.role == 3:
+            if user.role == 3:  # Lab Technician
                 if hasattr(user, 'lab_technicians'):
                     lab_technician = user.lab_technicians.first()
                     if lab_technician and lab_technician.profile_completed:
                         print("Redirecting completed lab tech profile to labtechindex.")
-                        return redirect('labtechindex')  # Redirect to the lab tech index page if profile is completed
+                        return redirect('labtechindex')
                     else:
                         print("Redirecting incomplete lab tech profile to labtechprofile.")
-                        return redirect('labtechprofile')  # Redirect to the labtechprofile page if profile is incomplete
+                        return redirect('labtechprofile')
+            
+            # Check if user is of role 2 and handle profile completion
+            elif user.role == 2:  # Role 2 user
+                if hasattr(user, 'profiles'):
+                    user_profile = user.profiles.first()
+                    if user_profile and user_profile.profile_completed:
+                        print("Redirecting user with role 2 to lab index.")
+                        return redirect('labindex')
+                    else:
+                        print("Redirecting incomplete profile user with role 2 to labprofile.")
+                        return redirect('labprofile')
 
             # Check user role and redirect accordingly
             if user.is_superuser:
                 print("Redirecting superuser to admin index.")
                 return redirect('adminindex')  # Redirect to the admin index page if superuser
             elif hasattr(user, 'role'):
-                if user.role == 2:
-                    print("Redirecting user with role 2 to lab index.")
-                    return redirect('labindex')  # Redirect to the lab index page if role is 2
-                elif user.role == 0:
+                if user.role == 0:
                     print("Redirecting user with role 0 to user index.")
                     return redirect('user_index')  # Redirect to the user index page if role is 0
             else:
@@ -63,6 +70,7 @@ def login_view(request):
             return render(request, 'login.html', {'error': error})
     
     return render(request, 'login.html')
+
 
 
 
@@ -130,9 +138,9 @@ from .models import User
 
 @user_passes_test(lambda u: u.is_superuser)  # Ensure only superusers can access this view
 def user_list_view(request):
-    users = User.objects.filter(is_staff=False)  # Exclude staff members
+    # Filter users with role=0 and is_staff=False
+    users = User.objects.filter(role=0, is_staff=False)
     return render(request, 'admins/user_list.html', {'users': users})
-
 @user_passes_test(lambda u: u.is_superuser)
 def toggle_user_status(request, user_id):
     user = get_object_or_404(User, id=user_id)
@@ -341,16 +349,34 @@ def edit_profile_view(request):
         return redirect('profile')  # Adjust this redirect as needed
 
     return render(request, 'user/edit_profile.html', {'user': user})
+from django.shortcuts import render
+from .models import User, UserProfile  # Adjust the import based on your project structure
+
 def labtech_list_view(request):
-    # Filter users by role=2
-    users = User.objects.filter(role=2)
+    # Filter users by role=2 and prefetch related UserProfile data
+    users = User.objects.filter(role=2).prefetch_related('profiles')
     return render(request, 'admins/labtech.html', {'users': users})
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 from .forms import UserProfileForm
 from .models import UserProfile
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash, get_user_model
+from .models import UserProfile
+from .forms import UserProfileForm
+
+User = get_user_model()
+
+from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
+from django.contrib import messages
 
 @login_required
 def labprofile_view(request):
@@ -362,11 +388,6 @@ def labprofile_view(request):
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
 
-        # Check if passwords match
-        if password != confirm_password:
-            messages.error(request, 'Passwords do not match')
-            return redirect('labprofile')  # Redirect back to the form
-
         # Get the currently logged-in user
         user = request.user
 
@@ -374,10 +395,15 @@ def labprofile_view(request):
             messages.error(request, 'User is not authenticated')
             return redirect('login')  # Redirect to login if user is not authenticated
 
-        # Update the user's password if provided
+        # Check if passwords match and update the password if provided
         if password:
-            user.password = make_password(password)
-            user.save()
+            if password == confirm_password:
+                user.set_password(password)  # Use set_password to hash the password
+                user.save()
+                update_session_auth_hash(request, user)  # Important to keep the user logged in after password change
+            else:
+                messages.error(request, 'Passwords do not match')
+                return redirect('labprofile')  # Redirect back to the form
 
         # Update or create the UserProfile
         UserProfile.objects.update_or_create(
@@ -394,20 +420,25 @@ def labprofile_view(request):
         return redirect('labindex')  # Redirect to labindex after saving profile
 
     else:
-        # Try to get the user's profile or initialize an empty form
+        # Try to get the user's UserProfile or initialize an empty form
         try:
-            profile = request.user.userprofile
+            profile = request.user.profiles.first()  # Changed to access UserProfile via profiles
             form = UserProfileForm(instance=profile)
         except UserProfile.DoesNotExist:
             form = UserProfileForm()
 
     return render(request, 'lab/labprofile.html', {'form': form})
+
+
+
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth import get_user_model
-from .forms import LabTechnicianForm
 from .models import LabTechnician
+from .forms import LabTechnicianForm
 
 User = get_user_model()
 
@@ -432,19 +463,17 @@ def labtechprofile_view(request):
         if password:
             if password == confirm_password:
                 user.set_password(password)
+                update_session_auth_hash(request, user)  # Update session hash to prevent logout
+                user.save()  # Save user with updated password
             else:
                 messages.error(request, 'Passwords do not match')
                 return redirect('labtechprofile')
 
         # Update user's dob, gender, and phone using update_or_create
-        User.objects.update_or_create(
-            id=user.id,
-            defaults={
-                'dob': dob if dob else user.dob,
-                'gender': gender if gender else user.gender,
-                'phone': phone if phone else user.phone,
-            }
-        )
+        user.dob = dob if dob else user.dob
+        user.gender = gender if gender else user.gender
+        user.phone = phone if phone else user.phone
+        user.save()
 
         # Update or create LabTechnician profile
         LabTechnician.objects.update_or_create(
@@ -467,6 +496,7 @@ def labtechprofile_view(request):
             form = LabTechnicianForm()
 
     return render(request, 'labtech/labtechprofile.html', {'form': form})
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import TestName, UserProfile  # Ensure your models are imported
