@@ -87,6 +87,7 @@ class Booking(models.Model):
     appointment_time = models.TimeField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     test = models.ForeignKey(TestName, on_delete=models.CASCADE)
+    test_types = models.ManyToManyField(TestType)  # Changed to ManyToManyField
 
     def __str__(self):
         return f"Booking with {self.user} on {self.appointment_date}"

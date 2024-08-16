@@ -1,0 +1,40 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Booking Details | MEDLAB</title>
+    <link rel="shortcut icon" href="{% static 'assets/images/fav.jpg' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/fontawesome-all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/plugins/slider/css/owl.carousel.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/plugins/slider/css/owl.theme.default.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style.css' %}" />
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Booking Details</h2>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Booking ID: {{ booking.id }}</h5>
+                <p class="card-text"><strong>User:</strong> {{ booking.user }}</p>
+                <p class="card-text"><strong>Appointment Date:</strong> {{ booking.appointment_date|date:"Y-m-d" }}</p>
+                <p class="card-text"><strong>Appointment Time:</strong> {{ booking.appointment_time|time:"H:i" }}</p>
+                <p class="card-text"><strong>Status:</strong> {{ booking.get_status_display }}</p>
+                <p class="card-text"><strong>Test:</strong> {{ booking.test }}</p>
+                <h5 class="mt-4">Test Types</h5>
+                <ul>
+                    {% for test_type in test_types %}
+                    <li>{{ test_type.tests_names }} (Normal Range: {{ test_type.normal_range }})</li>
+                    {% endfor %}
+                </ul>
+                <a href="{% url 'labindex' %}" class="btn btn-primary mt-3">Back to Bookings</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -22,6 +22,7 @@ class RegistrationForm(forms.ModelForm):
             raise forms.ValidationError("Passwords must match.")
 
         return cleaned_data
+
 from django import forms
 from .models import UserProfile
 
@@ -53,4 +54,17 @@ class BookingForm(forms.ModelForm):
             'appointment_time': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
             'test': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+from django import forms
+from .models import TestType
+
+class TestTypeForm(forms.ModelForm):
+    class Meta:
+        model = TestType
+        fields = ['test_id', 'tests_names', 'normal_range']
+        widgets = {
+            'test_id': forms.Select(attrs={'class': 'form-control'}),
+            'tests_names': forms.TextInput(attrs={'class': 'form-control'}),
+            'normal_range': forms.TextInput(attrs={'class': 'form-control'}),
         }

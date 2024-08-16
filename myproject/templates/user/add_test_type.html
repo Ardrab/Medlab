@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{% static 'assets/plugins/slider/css/owl.carousel.min.css' %}">
     <link rel="stylesheet" href="{% static 'assets/plugins/slider/css/owl.theme.default.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style.css' %}" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript">
         function preventBack(){window.history.forward();}
         setTimeout("preventBack()", 0);
@@ -124,7 +125,7 @@
                     <!-- Navigation Menu -->
                     <div id="menu" class="col-lg-7 col-md-8 d-none d-md-block nav-item">
                         <ul>
-                            <li><a href="{% url 'userindex' %}">Home</a></li>
+                            <li><a href="{% url 'user_index' %}">Home</a></li>
                             <li><a href="#about">About Us</a></li>
                             <li><a href="#services">Services</a></li>
                             <li><a href="#gallery">Gallery</a></li>
@@ -132,19 +133,13 @@
                         </ul>
                     </div>
 
-                    <div class="col-md-1">
-                        <div class="btn btn-info">
-                            <a href="{% url 'addlabtech' %}" class="text-white">Add lab technician</a>
-                        </div>
-                    </div>
-
                     <!-- User Dropdown -->
                     <div class="col-md-2 d-flex justify-content-end align-items-center">
                         <div class="dropdown">
-                            <button class="btn btn-info dropdown-toggle" type="button" id="userDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Welcome, {{ user.first_name }}
                             </button>
-                            <div class="dropdown-menu" aria-labelledby="userDropdown">
+                            <div class="dropdown-menu">
                                 <a class="dropdown-item" href="{% url 'profile' %}">Profile</a>
                                 <a class="dropdown-item" href="#">Settings</a>
                                 <div class="dropdown-divider"></div>
@@ -190,7 +185,6 @@
                 <div class="form-group">
                     <label for="appointment_date" class="form-label">Appointment Date</label>
                     <input type="date" id="appointment_date" name="appointment_date" class="form-control" required>
-                    <small id="dateError" class="form-text text-danger" style="display: none;">Please select a date from today onwards.</small>
                 </div>
                 <div class="form-group">
                     <label for="appointment_time" class="form-label">Appointment Time</label>
@@ -283,8 +277,18 @@
                     timeSelect.appendChild(option);
                 });
             });
-        </script>
 
+            function getSelectedCheckboxIds() {
+                const checkboxes = document.querySelectorAll('#test_names_container input[type="checkbox"]:checked');
+                const selectedIds = Array.from(checkboxes).map(checkbox => checkbox.id);
+                console.log('Selected Checkbox IDs:', selectedIds);
+                alert('Selected Checkbox IDs: ' + selectedIds.join(', '));
+            }
+        </script>
+        <script>
+            var today = new Date().toISOString().split('T')[0];
+            document.getElementById('appointment_date').setAttribute('min', today);
+        </script>
         <!-- Include necessary JavaScript files -->
         <script src="{% static 'assets/js/jquery.min.js' %}"></script>
         <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>

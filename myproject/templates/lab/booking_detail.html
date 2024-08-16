@@ -212,6 +212,9 @@
                                 Schedule
                             </a>
                         {% endif %}
+                        <a href="{% url 'view_booking_details' booking.id %}" class="btn btn-info btn-sm">
+                            View Details
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -300,4 +303,3 @@
 </body>
 
 </html>
-

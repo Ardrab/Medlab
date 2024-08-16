@@ -710,73 +710,71 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from datetime import datetime
 from .models import Tests, Booking, TestName
-
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from .models import TestName, TestType, Booking
 from datetime import datetime
-from .models import Booking, Tests, TestName
 
 @login_required
 def add_test_type(request):
     if request.method == 'POST':
         # Extract data from the POST request
-        test_id=request.POST.get('test_id')
-        name_id = request.POST.get('name_id')
-        test_ids = request.POST.getlist('test_ids')
+        test_name_id = request.POST.get('name_id')
+        test_type_ids = request.POST.getlist('test_ids')
         appointment_date = request.POST.get('appointment_date')
         appointment_time = request.POST.get('appointment_time')
 
         # Debug statements to verify data
-        print("TE ID:", test_id)
-        print("Name ID:", name_id)
-        print("Test IDs:", test_ids)
+        print("Test Name ID:", test_name_id)
+        print("Test Type IDs:", test_type_ids)
         print("Appointment Date:", appointment_date)
         print("Appointment Time:", appointment_time)
 
         # Basic validation
-        if not name_id or not appointment_date or not appointment_time:
-            return HttpResponse("Required fields are missing.")
-        
-        # Convert 12-hour time format (if needed) to 24-hour time format
-        if appointment_time:
-            appointment_time_24 = datetime.strptime(appointment_time, '%I:%M %p').strftime('%H:%M')
-        else:
-            return HttpResponse("Invalid time format. Please use 'HH:MM AM/PM'.")
+        if not test_name_id or not test_type_ids or not appointment_date or not appointment_time:
+            messages.error(request, 'Please fill out all required fields.')
+            return redirect('add_test_type')
 
-        # Combine date and time into a single datetime
-        if appointment_date and appointment_time_24:
+        try:
+            test_name = TestName.objects.get(pk=test_name_id)
+        except TestName.DoesNotExist:
+            messages.error(request, 'Test Name not found.')
+            return redirect('add_test_type')
+
+        try:
+            # Convert 12-hour time format to 24-hour time format
+            appointment_time_24 = datetime.strptime(appointment_time, '%I:%M %p').strftime('%H:%M')
+
+            # Combine date and time into a single datetime
             appointment_datetime = datetime.combine(
                 datetime.strptime(appointment_date, '%Y-%m-%d').date(),
                 datetime.strptime(appointment_time_24, '%H:%M').time()
             )
-        else:
-            return HttpResponse("Invalid date or time format.")
+        except ValueError:
+            messages.error(request, "Invalid date or time format.")
+            return redirect('add_test_type')
 
         # Create and save a new Booking
         booking = Booking(
             user=request.user,
             appointment_date=appointment_datetime,
-            appointment_time=appointment_time_24,  # Store time in 24-hour format
+            appointment_time=appointment_datetime.time(),
             status='pending',  # Default status
-            test_id=name_id  # Set the test type based on the name_id
+            test=test_name,
         )
         booking.save()
+        booking.test_types.set(test_type_ids)  # Set the many-to-many relationship
 
-        # Optionally, handle additional test types if necessary
-        for test_id in test_ids:
-            test = Tests.objects.filter(test_id=test_id).first()
-            if test:
-                # Handle saving TestType information or associate it with the booking if needed
-                pass
-
-        # Redirect to userindex after successful form submission
+        messages.success(request, 'Appointments booked successfully.')
         return redirect('user_index')
-    
+
     else:
-        # For GET requests, render the form
-        test_names = TestName.objects.all()
-        return render(request, 'user/add_test_type.html', {'test_names': test_names})
+        context = {
+            'test_names': TestName.objects.all(),
+            'tests': TestType.objects.all(),
+        }
+        return render(request, 'user/add_test_type.html', context)
 
 from django.shortcuts import render, get_object_or_404
 from .models import Booking
@@ -787,9 +785,16 @@ from .forms import BookingForm
 from django.shortcuts import render, get_object_or_404
 from .models import Booking, TestType
 
+from django.shortcuts import render
+from .models import Booking, TestType
+
 def booking_list_view(request):
     bookings = Booking.objects.all()
-    return render(request, 'lab/booking_detail.html', {'bookings': bookings})
+    test_types = TestType.objects.all()  # Fetch all TestType instances
+    return render(request, 'lab/booking_detail.html', {
+        'bookings': bookings,
+        'test_types': test_types  # Pass test_types to the template
+    })
 
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -809,3 +814,46 @@ def update_booking_status(request, booking_id, new_status):
         return redirect('booking_list_view')
     else:
         return HttpResponse("Invalid status.")
+from django.shortcuts import render, get_object_or_404
+from .models import TestName, Tests, TestType
+
+
+from django.shortcuts import get_object_or_404, render
+from myapp.models import TestName, Tests, TestType
+
+def view_test_details(request, name_id):
+    # Get the TestName object using name_id
+    test_name = get_object_or_404(TestName, pk=name_id)
+    
+    # Get all Tests associated with the TestName
+    tests = Tests.objects.filter(name_id=test_name)
+    
+    # Get all TestTypes associated with the Tests
+    test_types = TestType.objects.filter(test_id__in=tests)
+
+    # Debug prints to ensure data retrieval
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.debug("Test Name: %s", test_name)
+    logger.debug("Tests: %s", tests)
+    logger.debug("Test Types: %s", test_types)
+
+    context = {
+        'test_name': test_name,
+        'tests': tests,
+        'test_types': test_types,
+    }
+    
+    # Render the details in the template
+    return render(request, 'lab/view_test_details.html', context)
+from django.shortcuts import render, get_object_or_404
+from .models import Booking
+
+def view_booking_details(request, booking_id):
+    booking = get_object_or_404(Booking, pk=booking_id)
+    test_types = booking.test_types.all()
+    context = {
+        'booking': booking,
+        'test_types': test_types,
+    }
+    return render(request, 'lab/view_booking_details.html', context)

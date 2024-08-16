@@ -44,10 +44,7 @@ urlpatterns = [
     path('bookings/', views.booking_list_view, name='booking_list_view'),
     path('user/schedule-xray/', views.schedule_xray_view, name='schedule_xray'),
     path('update_booking_status/<int:booking_id>/<str:new_status>/', views.update_booking_status, name='update_booking_status'),
+    path('view_test_details/<int:name_id>/', views.view_test_details, name='view_test_details'),
+    
+    path('view_booking_details/<int:booking_id>/', views.view_booking_details, name='view_booking_details'),
 ]
-
-
-     
-
-
-
